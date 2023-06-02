@@ -2,12 +2,12 @@
 # %sh
 # ls /mnt/
 # dbutils.fs.ls("abfss://pub-env@stpdlincaesa.dfs.core.windows.net/")
-
-dbutils.fs.ls("abfss://dev-sandbox-syn@stnsycaesa.dfs.core.windows.net/CrisHudici")
+path = 'abfss://dev-sandbox@stndlincaesa.dfs.core.windows.net/CrisHudici/'
+dbutils.fs.ls(path)
 
 # COMMAND ----------
 
-df = spark.read.option("header",True).csv("abfss://dev-sandbox-syn@stnsycaesa.dfs.core.windows.net/CrisHudici/toronto_departures.csv")
+df = spark.read.option("header",True).csv("abfss://dev-sandbox@stndlincaesa.dfs.core.windows.net/CrisHudici/toronto_departures.csv")
 display(df)
 
 # COMMAND ----------
@@ -17,6 +17,8 @@ display(df)
 import pandas as pd
 # import sas7bdat
 # from sas7bdat import *
+# install.packages('fsspec')
+# import fsspec
 import platform
 import pyspark
 print('Python: ', platform.python_version())
@@ -26,7 +28,7 @@ print('pandas: ', pd.__version__)
 # Pandas only read from local file system and that's the reason why it cannot find the file.
 # sasFile = '/dbfs/mnt/pub-env/CrisHudici/class.sas7bdat'
 # sasFile = '/dbfs/mnt/pub-env/CrisHudici/airline.sas7bdat'
-sasFile = '/dbfs/mnt/pub-env/CrisHudici/airline.sas7bdat'
+sasFile = 'abfss://dev-sandbox-syn@stnsycaesa.dfs.core.windows.net/CrisHudici/airline.sas7bdat'
 # https://stackoverflow.com/questions/49059421/pandas-fails-with-correct-data-type-while-reading-a-sas-file
 # sasFile = 'file:/mnt/pub-env/CrisHudici/airline.sas7bdat'
 # foo = SAS7BDAT(sasFile)
@@ -51,7 +53,7 @@ df.head(10)
 # MAGIC %r
 # MAGIC # install.packages("haven")
 # MAGIC library(haven)
-# MAGIC sasFile = '/mnt/pub-env/CrisHudici/airline.sas7bdat'
+# MAGIC sasFile = path + 'airline.sas7bdat'
 # MAGIC srcTaxFfs = read_sas(sasFile)
 
 # COMMAND ----------
@@ -63,9 +65,9 @@ df.head(10)
 # MAGIC # install.packages("pyreadstat")
 # MAGIC # install.packages("xport")
 # MAGIC # library(sas7bdat)
-# MAGIC # path = '/mnt/pub-env/CrisHudici'
+# MAGIC # path = 'abfss://dev-sandbox@stndlincaesa.dfs.core.windows.net/CrisHudici'
 # MAGIC # sasFile = path + 'airline.sas7bdat'
-# MAGIC sasFile <- '/dbfs/mnt/pub-env/CrisHudici/airline.sas7bdat'
+# MAGIC sasFile <- 'abfss://dev-sandbox@stndlincaesa.dfs.core.windows.net/CrisHudici/airline.sas7bdat'
 # MAGIC # df <- read_sas("airline.sas7bdat")
 # MAGIC df <- read_sas(sasFile)
 # MAGIC head(df)
@@ -81,13 +83,14 @@ df.head(10)
 # MAGIC %python
 # MAGIC import os
 # MAGIC import zipfile
-# MAGIC os.chdir('/dbfs/mnt/pub-env/CrisHudici/')
+# MAGIC # os.chdir(path)
 # MAGIC cwd = os.getcwd()
 # MAGIC print("The current working directory: {0}".format(cwd))
 # MAGIC os.listdir('./')
-# MAGIC sasFile = '/dbfs/mnt/pub-env/CrisHudici/class.sas7bdat'
+# MAGIC sasFile = path + '/class.sas7bdat'
 # MAGIC df = pd.read_sas(sasFile, format='sas7bdat', index=None, encoding=None, chunksize=None, iterator=False)
 # MAGIC df.head(10)
+# MAGIC
 
 # COMMAND ----------
 
@@ -96,7 +99,7 @@ import platform
 import pyspark
 
 # Reads a SAS file, converts it to parquet and csv and displays the first 5 rows
-path = '/dbfs/mnt/pub-env/CrisHudici'
+# path = 'abfss://dev-sandbox@stndlincaesa.dfs.core.windows.net/CrisHudici/'
 sasFile = path + '/airline.sas7bdat'
 df = pd.read_sas(sasFile, format='sas7bdat', index=None, encoding=None, chunksize=None, iterator=False)
 parquetFile = path + './airline.parquet'
@@ -110,7 +113,7 @@ df.head(5)
 import pyspark
 
 # Departures from Toronto Pearson International Airport (YYZ): 03/05/2023
-path = '/mnt/pub-env/CrisHudici'
+# path = 'abfss://dev-sandbox@stndlincaesa.dfs.core.windows.net/CrisHudici/'
 csvFile = path + '/toronto_departures.csv'
 df = spark.read.csv(csvFile, header='true', inferSchema='true')
 df.createOrReplaceTempView('toronto_departures')     # saved in a hadoop table (view) - see Data
@@ -130,7 +133,7 @@ import pandas as pd
 import pyspark
 # https://stackoverflow.com/questions/51949414/read-sas-sas7bdat-data-with-spark
 # https://spark-packages.org/package/saurfang/spark-sas7bdat
-path = '/dbfs/mnt/pub-env/CrisHudici'
+# path = 'abfss://dev-sandbox@stndlincaesa.dfs.core.windows.net/CrisHudici/'
 sasFile = path + '/airline.sas7bdat'
 df = pd.read_sas(sasFile, format='sas7bdat', index=None, encoding=None, chunksize=None, iterator=False)
 # csvFile = path + './airline.csv'
@@ -142,7 +145,7 @@ df.createOrReplaceTempView('airline')
 
 from pyspark.sql import SQLContext
 
-path = '/dbfs/mnt/pub-env/CrisHudici'
+# path = 'abfss://dev-sandbox@stndlincaesa.dfs.core.windows.net/CrisHudici/'
 sasFile = path + '/airline.sas7bdat'
 sqlContext = SQLContext(sc)
 # df = sqlContext.read.format("com.github.saurfang.sas.spark").load(sasFile)
@@ -164,7 +167,7 @@ import platform
 import pyspark
 
 # Reads a SAS file, converts it to parquet and csv and displays the first 3 rows
-path = '/dbfs/mnt/pub-env/CrisHudici'
+# path = 'abfss://dev-sandbox@stndlincaesa.dfs.core.windows.net/CrisHudici/'
 sasFile = path + '/airline.sas7bdat'
 df = pd.read_sas(sasFile, format='sas7bdat', index=None, encoding=None, chunksize=None, iterator=False)
 parquetFile = path + './airline.parquet'
@@ -177,7 +180,7 @@ df.head(3)
 
 import pyspark
 
-path = '/mnt/pub-env/CrisHudici'
+# path = 'abfss://dev-sandbox@stndlincaesa.dfs.core.windows.net/CrisHudici/'
 csvFile = path + '/airline.csv'
 df = spark.read.csv(csvFile, header='true', inferSchema='true')
 df.createOrReplaceTempView('airline')
@@ -186,11 +189,10 @@ df.createOrReplaceTempView('airline')
 
 read_format = 'csv'
 write_format = 'delta'
-load_path = 'abfss://pie-eip-p@stpdmfdiiun01sa.dfs.core.windows.net/CrisHudici/toronto_departures.csv'
-save_path = 'abfss://pie-eip-p@stpdmfdiiun01sa.dfs.core.windows.net/CrisHudici/'
+source_file = path + 'toronto_departures.csv'
 table_name = 'departures'
 
-spark.sql("CREATE TABLE " + table_name + " USING CSV LOCATION '" + load_path + "'") 
+spark.sql("CREATE TABLE " + table_name + " USING CSV LOCATION '" + source_file + "'") 
 display(table_name)
 
 # COMMAND ----------
@@ -204,7 +206,7 @@ display(table_name)
 
 # MAGIC %sql
 # MAGIC -- DROP TABLE IF EXISTS tor_dep2;
-# MAGIC CREATE TABLE IF NOT EXISTS tor_dep2 USING CSV LOCATION 'abfss://pie-eip-p@stpdmfdiiun01sa.dfs.core.windows.net/CrisHudici/toronto_departures.csv';
+# MAGIC CREATE TABLE IF NOT EXISTS tor_dep2 USING CSV LOCATION 'abfss://dev-sandbox@stndlincaesa.dfs.core.windows.net/CrisHudici//toronto_departures.csv';
 # MAGIC SELECT *
 # MAGIC FROM tor_dep2
 # MAGIC LIMIT 4
@@ -215,3 +217,6 @@ display(table_name)
 # MAGIC SELECT *
 # MAGIC FROM departures
 # MAGIC LIMIT 3
+
+# COMMAND ----------
+
