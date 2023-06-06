@@ -1,4 +1,22 @@
 # Databricks notebook source
+# MAGIC %sh
+# MAGIC curl -O "https://jfrog.aaw.cloud.statcan.ca/artifactory/pypi-remote/sas7bdat"
+
+# COMMAND ----------
+
+# MAGIC %sh
+# MAGIC curl -O "https://jfrog.aaw.cloud.statcan.ca/artifactory/pypi-remote/fsspec"
+
+# COMMAND ----------
+
+pip config --user set global.index-url https://jfrog.aaw.cloud.statcan.ca/artifactory/api/pypi/pypi-remote/simple
+
+# COMMAND ----------
+
+pip install fsspec
+
+# COMMAND ----------
+
 # %sh
 # ls /mnt/
 # dbutils.fs.ls("abfss://pub-env@stpdlincaesa.dfs.core.windows.net/")
@@ -7,7 +25,7 @@ dbutils.fs.ls(path)
 
 # COMMAND ----------
 
-df = spark.read.option("header",True).csv("abfss://dev-sandbox@stndlincaesa.dfs.core.windows.net/CrisHudici/toronto_departures.csv")
+df = spark.read.option("header",True).csv(path + "toronto_departures.csv")
 display(df)
 
 # COMMAND ----------
@@ -15,36 +33,44 @@ display(df)
 # import pyreadstat
 # import saspy
 import pandas as pd
-# import sas7bdat
-# from sas7bdat import *
+
+import sas7bdat
+from sas7bdat import *
 # install.packages('fsspec')
-# import fsspec
+import fsspec
 import platform
 import pyspark
-print('Python: ', platform.python_version())
-print('pandas: ', pd.__version__)
 
-#https://stackoverflow.com/questions/69293491/file-found-on-pyspark-but-not-found-in-pandas
+print("Python: ", platform.python_version())
+print("pandas: ", pd.__version__)
+
+# https://stackoverflow.com/questions/69293491/file-found-on-pyspark-but-not-found-in-pandas
 # Pandas only read from local file system and that's the reason why it cannot find the file.
 # sasFile = '/dbfs/mnt/pub-env/CrisHudici/class.sas7bdat'
 # sasFile = '/dbfs/mnt/pub-env/CrisHudici/airline.sas7bdat'
-sasFile = 'abfss://dev-sandbox-syn@stnsycaesa.dfs.core.windows.net/CrisHudici/airline.sas7bdat'
+sasFile = path + "/airline.sas7bdat"
 # https://stackoverflow.com/questions/49059421/pandas-fails-with-correct-data-type-while-reading-a-sas-file
 # sasFile = 'file:/mnt/pub-env/CrisHudici/airline.sas7bdat'
 # foo = SAS7BDAT(sasFile)
 # with SAS7BDAT(sasFile, skip_header=False) as reader:
 #  df = reader.to_data_frame()
-df = pd.read_sas(sasFile, format='sas7bdat', index=None, encoding=None, chunksize=None, iterator=False)
+df = pd.read_sas(
+    sasFile,
+    format="sas7bdat",
+    index=None,
+    encoding=None,
+    chunksize=None,
+    iterator=False,
+)
 df.head(5)
-#df = spark.read.format('dat').options(header='true', inferSchema='false').dat(sasFile) 
-#df = df.head()
-#print(df)
-#type(df)
-
+# df = spark.read.format('dat').options(header='true', inferSchema='false').dat(sasFile)
+# df = df.head()
+# print(df)
+# type(df)
 
 # COMMAND ----------
 
-textFile = '/mnt/pub-env/CrisHudici/shakespeare - short.txt'
+textFile = path + 'shakespeare - short.txt'
 df = spark.read.text(textFile)
 df.head(10)
 
@@ -220,3 +246,5 @@ display(table_name)
 
 # COMMAND ----------
 
+# MAGIC %sql
+# MAGIC
