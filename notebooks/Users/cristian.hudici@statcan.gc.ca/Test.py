@@ -17,6 +17,10 @@ pip install fsspec
 
 # COMMAND ----------
 
+pip install sas7bdat
+
+# COMMAND ----------
+
 # %sh
 # ls /mnt/
 # dbutils.fs.ls("abfss://pub-env@stpdlincaesa.dfs.core.windows.net/")
@@ -48,12 +52,16 @@ print("pandas: ", pd.__version__)
 # Pandas only read from local file system and that's the reason why it cannot find the file.
 # sasFile = '/dbfs/mnt/pub-env/CrisHudici/class.sas7bdat'
 # sasFile = '/dbfs/mnt/pub-env/CrisHudici/airline.sas7bdat'
+path = 'abfss://dev-sandbox@stndlincaesa.dfs.core.windows.net/CrisHudici/'
 sasFile = path + "/airline.sas7bdat"
 # https://stackoverflow.com/questions/49059421/pandas-fails-with-correct-data-type-while-reading-a-sas-file
 # sasFile = 'file:/mnt/pub-env/CrisHudici/airline.sas7bdat'
 # foo = SAS7BDAT(sasFile)
 # with SAS7BDAT(sasFile, skip_header=False) as reader:
 #  df = reader.to_data_frame()
+# https://stackoverflow.com/questions/72204477/databricks-pyspark-pandas-dataframe-to-excel-does-not-recognize-abfss-protocol
+# The pandas dataframe does not support the protocol abfss. It seems on Databricks you can only access and write the file on abfss via Spark dataframe. 
+# So, the solution is to write file locally and manually move to abfss.
 df = pd.read_sas(
     sasFile,
     format="sas7bdat",
