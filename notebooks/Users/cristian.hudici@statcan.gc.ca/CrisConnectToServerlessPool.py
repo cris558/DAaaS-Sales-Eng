@@ -1,7 +1,6 @@
 # Databricks notebook source
-# pip install adal
 import adal
-keyvault = "devsandbox"
+keyvault = "devsandbox-kv"
  
 tenant = dbutils.secrets.get(scope = keyvault, key = "TenantID")
 login_url = "https://login.microsoftonline.com"
@@ -35,6 +34,3 @@ pushdown_query = """(
 
 df = spark.read.jdbc(url=jdbcUrl, table=pushdown_query, properties=connectionProperties)
 display(df)
-
-# COMMAND ----------
-
