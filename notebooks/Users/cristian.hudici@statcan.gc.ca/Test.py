@@ -25,6 +25,7 @@ pip install sas7bdat
 # ls /mnt/
 # dbutils.fs.ls("abfss://pub-env@stpdlincaesa.dfs.core.windows.net/")
 path = 'abfss://dev-sandbox@stndlincaesa.dfs.core.windows.net/CrisHudici/'
+#path = 'dbfs:/mnt/dev-sandbox/CrisHudici' #    dev-sandbox@stndlincaesa.dfs.core.windows.net/CrisHudici/'
 dbutils.fs.ls(path)
 
 # COMMAND ----------
@@ -35,11 +36,11 @@ display(df)
 # COMMAND ----------
 
 # import pyreadstat
-# import saspy
+import saspy
 import pandas as pd
-
 import sas7bdat
 from sas7bdat import *
+
 # install.packages('fsspec')
 import fsspec
 import platform
@@ -52,29 +53,39 @@ print("pandas: ", pd.__version__)
 # Pandas only read from local file system and that's the reason why it cannot find the file.
 # sasFile = '/dbfs/mnt/pub-env/CrisHudici/class.sas7bdat'
 # sasFile = '/dbfs/mnt/pub-env/CrisHudici/airline.sas7bdat'
-path = 'abfss://dev-sandbox@stndlincaesa.dfs.core.windows.net/CrisHudici/'
-sasFile = path + "/airline.sas7bdat"
+path = "abfss://dev-sandbox@stndlincaesa.dfs.core.windows.net/CrisHudici/"
+sasFile = path + "airline.sas7bdat"
 # https://stackoverflow.com/questions/49059421/pandas-fails-with-correct-data-type-while-reading-a-sas-file
 # sasFile = 'file:/mnt/pub-env/CrisHudici/airline.sas7bdat'
 # foo = SAS7BDAT(sasFile)
 # with SAS7BDAT(sasFile, skip_header=False) as reader:
-#  df = reader.to_data_frame()
+#df = reader.to_data_frame()
 # https://stackoverflow.com/questions/72204477/databricks-pyspark-pandas-dataframe-to-excel-does-not-recognize-abfss-protocol
-# The pandas dataframe does not support the protocol abfss. It seems on Databricks you can only access and write the file on abfss via Spark dataframe. 
+# The pandas dataframe does not support the protocol abfss. It seems on Databricks you can only access and write the file on abfss via Spark dataframe.
 # So, the solution is to write file locally and manually move to abfss.
-df = pd.read_sas(
-    sasFile,
-    format="sas7bdat",
-    index=None,
-    encoding=None,
-    chunksize=None,
-    iterator=False,
-)
-df.head(5)
-# df = spark.read.format('dat').options(header='true', inferSchema='false').dat(sasFile)
-# df = df.head()
-# print(df)
-# type(df)
+#df = pd.read_sas(
+ #    sasFile,
+  #   format="sas7bdat",
+   #  index=None,
+    # encoding=None,
+     #chunksize=None,
+     #iterator=False,
+ #)
+ # df.head(5)
+#df, meta = pyreadstat.read_sas7bdat('abfss://dev-sandbox@stndlincaesa.dfs.core.windows.net/CrisHudici/airline.sas7bdat')
+#df = spark.read("sasFile")
+# Using read options
+df = spark.read.format("sas7bdat").load("abfss://dev-sandbox@stndlincaesa.dfs.core.windows.net/CrisHudici/airline.sas7bdat")
+
+df = df.head()
+print(df)
+type(df)
+
+# COMMAND ----------
+
+
+df = spark.read.format("com.github.saurfang.sas.spark").load("abfss://dev-sandbox@stndlincaesa.dfs.core.windows.net/CrisHudici/airline.sas7bdat", forceLowercaseNames=True, inferLong=True)
+df.write.csv("newfile.csv", header=True)
 
 # COMMAND ----------
 
@@ -116,6 +127,7 @@ df.head(10)
 
 # MAGIC %python
 # MAGIC import os
+# MAGIC import pandas as pd
 # MAGIC import zipfile
 # MAGIC # os.chdir(path)
 # MAGIC cwd = os.getcwd()
@@ -254,5 +266,45 @@ display(table_name)
 
 # COMMAND ----------
 
+import adal
+keyvault = "devsandbox"
+ 
+tenant = dbutils.secrets.get(scope = keyvault, key = "TenantID")
+login_url = "https://login.microsoftonline.com"
+authority_url = (login_url + '/' + tenant)
+ 
+context = adal.AuthenticationContext(authority_url, timeout=None)
+ 
+access_token = context.acquire_token_with_client_credentials(
+    "https://database.windows.net/",
+    dbutils.secrets.get(scope = keyvault, key = "DataBricksClientID"),
+    dbutils.secrets.get(scope = keyvault, key = "DataBricksSecret"))
+ 
+jdbcHostname = "dev-sandbox-syn-ondemand.sql.azuresynapse.net"
+jdbcDatabase = "testingdb"
+jdbcPort = 1433
+ 
+jdbcUrl = "jdbc:sqlserver://{0}:{1}".format(jdbcHostname, jdbcPort)
+ 
+connectionProperties = {   
+    "accessToken": access_token.get('accessToken'),  
+    "database": jdbcDatabase,  
+    "trustServerCertificate" : "false", 
+    "encrypt" : "true",  
+    "driver" : "com.microsoft.sqlserver.jdbc.SQLServerDriver",  
+    "hostNameInCertificate" : "*.database.windows.net" }
+
+pushdown_query = """(
+    SELECT * FROM testingdb.dbo.testing2
+  ) t"""
+
+df = spark.read.jdbc(url=jdbcUrl, table=pushdown_query, properties=connectionProperties)
+display(df)
+
+# COMMAND ----------
+
 # MAGIC %sql
-# MAGIC
+# MAGIC -- USE testingdb;
+# MAGIC SELECT *
+# MAGIC FROM testingdb.dbo.testing2
+# MAGIC LIMIT 3
