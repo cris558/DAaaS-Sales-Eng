@@ -1,4 +1,5 @@
 # Databricks notebook source
+# pip install adal
 import adal
 keyvault = "devsandbox"
  
@@ -14,7 +15,7 @@ access_token = context.acquire_token_with_client_credentials(
     dbutils.secrets.get(scope = keyvault, key = "DataBricksSecret"))
  
 jdbcHostname = "dev-sandbox-syn-ondemand.sql.azuresynapse.net"
-jdbcDatabase = "testingdb"
+jdbcDatabase = "testingdb" # "CrisDatabase"
 jdbcPort = 1433
  
 jdbcUrl = "jdbc:sqlserver://{0}:{1}".format(jdbcHostname, jdbcPort)
@@ -31,5 +32,9 @@ pushdown_query = """(
     SELECT Name = TABLE_SCHEMA + '.' + TABLE_NAME
     FROM INFORMATION_SCHEMA.TABLES
   ) t"""
+
 df = spark.read.jdbc(url=jdbcUrl, table=pushdown_query, properties=connectionProperties)
 display(df)
+
+# COMMAND ----------
+
