@@ -1,6 +1,6 @@
 # Databricks notebook source
 import adal
-keyvault = "devsandbox-kv"
+keyvault = "devsandbox-kv1"
  
 tenant = dbutils.secrets.get(scope = keyvault, key = "TenantID")
 login_url = "https://login.microsoftonline.com"
@@ -14,7 +14,7 @@ access_token = context.acquire_token_with_client_credentials(
     dbutils.secrets.get(scope = keyvault, key = "DataBricksSecret"))
  
 jdbcHostname = "dev-sandbox-syn-ondemand.sql.azuresynapse.net"
-jdbcDatabase = "testingdb" # "CrisDatabase"
+jdbcDatabase = "testingdb"
 jdbcPort = 1433
  
 jdbcUrl = "jdbc:sqlserver://{0}:{1}".format(jdbcHostname, jdbcPort)
@@ -32,5 +32,22 @@ pushdown_query = """(
     FROM INFORMATION_SCHEMA.TABLES
   ) t"""
 
+pushdown_query2 = """(
+    SELECT * FROM testingdb.dbo.Wildfires
+  ) t"""
+
+# pushdown_query = """(
+#     SELECT * INTO testingdb.dbo.Wildfires_Backup
+#     FROM testingdb.dbo.Wildfires
+#     WHERE 1= 0
+#   ) t"""
+
 df = spark.read.jdbc(url=jdbcUrl, table=pushdown_query, properties=connectionProperties)
 display(df)
+
+df = spark.read.jdbc(url=jdbcUrl, table=pushdown_query2, properties=connectionProperties)
+display(df)
+
+
+# COMMAND ----------
+
