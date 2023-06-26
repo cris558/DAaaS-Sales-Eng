@@ -1,5 +1,5 @@
 # Databricks notebook source
-import adal
+import adal # Active Directory Authentication Library
 keyvault = "devsandbox-kv1"
  
 tenant = dbutils.secrets.get(scope = keyvault, key = "TenantID")
@@ -28,25 +28,47 @@ connectionProperties = {
     "hostNameInCertificate" : "*.database.windows.net" }
 
 pushdown_query = """(
-    SELECT Name = TABLE_SCHEMA + '.' + TABLE_NAME
-    FROM INFORMATION_SCHEMA.TABLES
-  ) t"""
-
-pushdown_query2 = """(
     SELECT * FROM testingdb.dbo.Wildfires
-  ) t"""
+    ) t"""
+
+# pushdown_query = spark.sql(f"SELECT * FROM {table_name}")
+
+# pushdown_query = spark.sql("SELECT * FROM testingdb.dbo.Wildfires")
+
+# pushdown_query2 = """(
+#     SELECT Name = TABLE_SCHEMA + '.' + TABLE_NAME 
+#     FROM INFORMATION_SCHEMA.TABLES
+#     ) a"""
+
+# SELECT * INTO testingdb.dbo.Wildfires_Backup
+# FROM testingdb.dbo.Wildfires
 
 # pushdown_query = """(
-#     SELECT * INTO testingdb.dbo.Wildfires_Backup
-#     FROM testingdb.dbo.Wildfires
-#     WHERE 1= 0
-#   ) t"""
+# CREATE EXTERNAL TABLE dbo.Wildfires_Backup (
+# 	[YEAR] nvarchar(4000),
+# 	[FIRES] nvarchar(4000),
+# 	[TOTAL_HA] nvarchar(4000),
+# 	[MAX_SIZE_HA] nvarchar(4000),
+# 	[FIRES >200ha] nvarchar(4000),
+# 	[TOTAL_HA (>200ha)] nvarchar(4000)
+# 	)
+# 	WITH (
+# 	LOCATION = 'CrisHudici/Canada - wildland fire summary stats.csv',
+# 	DATA_SOURCE = [dev-sandbox_stndlincaesa_dfs_core_windows_net],
+# 	FILE_FORMAT = [SynapseDelimitedTextFormat]
+# 	)
+# GO
+
+# SELECT TOP 100 * FROM dbo.Wildfires_Backup
+# GO  ) t"""
 
 df = spark.read.jdbc(url=jdbcUrl, table=pushdown_query, properties=connectionProperties)
 display(df)
 
-df = spark.read.jdbc(url=jdbcUrl, table=pushdown_query2, properties=connectionProperties)
-display(df)
+# df.write.jdbc(url=jdbcUrl, table= "Wildfires_Backup",properties=connectionProperties, mode="overwrite")
+
+# df = spark.read.jdbc(url=jdbcUrl, table=pushdown_query2, properties=connectionProperties)
+# display(df)
 
 
 # COMMAND ----------
